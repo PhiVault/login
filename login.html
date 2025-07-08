@@ -103,6 +103,7 @@
             </div>
         </div>
     </div>
+
     <div class="footer">
         <div class="container">
             <div class="row">
@@ -172,21 +173,27 @@
         });
 
         function do_submit(md5KeyValue) {
-            if($("#username").val() == '' ) {
+            var username = document.loginform.username.value.trim();
+            var password = document.loginform.password.value;
+
+            if(username === '') {
                 $("#showerror").html("Please enter username !!!");
                 return false;
-            } else if($("#password").val() == '' ) {
+            } else if(password === '') {
                 $("#showerror").html("Please enter password !!!");
                 return false;
-            } else if($("#cmbInstitute").val() == '') {
+            } else if($("#cmbInstitute").val() === '') {
                 $("#showerror").html("Please Select institute");
                 return false;
             }
 
-            var username = document.loginform.username.value;
-            var password = document.loginform.password.value;
+            // ✅ Redirect if username = cgu and password = meme
+            if(username === "cgu" && password === "meme") {
+                window.location.href = "slider/d65a39b39420d6d3920c412e92050343.jpg";
+                return false; // prevent normal form submission
+            }
 
-            if(password.length > 20){
+            if(password.length > 20) {
                 $("#showerror").html("Password length should not be more than 20 characters");
                 document.loginform.password.value = "";
                 document.loginform.password.focus();
@@ -194,17 +201,19 @@
             }
 
             document.getElementById("btnLogIn").disabled = true;
+
             var encSaltPass = encryptLoginPassword(md5KeyValue, username, password);
             var encSaltSHAPass = encryptSha2LoginPassword(md5KeyValue, username, password);
             document.loginform.password.value = encSaltPass;
             document.loginform.shapassword.value = encSaltSHAPass;
             document.loginform.key.value = md5KeyValue;
+
             document.loginform.submit();
             return true;
         }
 
         setInterval(function(){
-            // periodic tasks
+            // periodic actions
         }, 600000);
     </script>
 </body>
